@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customizable Backtesting</title>
+<style>
+    body {
+  font-family: Arial, sans-serif;
+  margin: 150px;
+  margin-left: 400px;
+}
+
+h1{
+  color: rgb(31, 144, 144);
+}
+
+input, button {
+  display: block;
+  margin-bottom: 10px;
+
+  background-color: rgb(209, 206, 212);
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+h2{
+  color: coral;
+}
+
+ul li {
+  margin-bottom: 5px;
+  padding: 5px;
+  background: #b39191;
+  border-radius: 4px;
+}
+
+</style>
+
+</head>
+<body>
+<h1>Customizable Backtesting</h1>
+
+<label for="maPeriod">Moving Average Period:</label>
+<input id="maPeriod" type="number" value="5" min="1" max="30">
+<button id="backtestBtn">Backtest</button>
+
+<h2>Performance</h2>
+<ul id="trades"></ul>
+<p>Total Profit/Loss: <span id="total"></span></p>
+
+<script>
+    
+function generatePriceData(days = 30) {
+  let prices = [100];
+  for (let i = 1; i <= days; i++) {
+    let change = (Math.random() * 0.1 - 0.05);
+    prices.push(prices[prices.length - 1] * (1 + change)); 
+  }
+  return prices;
+}
+
+
+function movingAverage(prices, period) {
+  let ma = [];
+
+  for (let i = 0; i < prices.length; i++) {
+    if (i < period - 1) {
+      ma.push(null);
+    } else {
+      let sum = 0;
+      for (let j = i - period + 1; j <= i; j++) {
+        sum += prices[j];
+      }
+      ma.push(sum / period);
+    }
+  }
+  
+  return ma;
+}
+
+function backtest(prices, ma) {
+  let trades = []; 
+  let holdings = 0;
+  let buyPrice = 0;
+  let total = 0;
+
+  for (let i = 1; i < prices.length; i++) {
+    if (holdings === 0 && prices[i] > ma[i] && prices[i-1] <= ma[i-1]) {
+      holdings = 1;
+      buyPrice = prices[i];
+      trades.push({action:'Buy', price:buyPrice, day: i}); 
+    }
+    else if (holdings === 1 && prices[i] < ma[i] && prices[i-1] >= ma[i-1]) {
+      holdings = 0;
+      let Profit = prices[i] - buyPrice;
+      total += Profit;
+      trades.push({action:'Sell', price:prices[i], day: i, Profit}); 
+    }
+  }
+  return {trades, total};
+
+}
+
+document.getElementById('backtestBtn').addEventListener('click', () => {
+  const period = parseInt(document.getElementById('maPeriod').value);
+  const prices = generatePriceData(30);
+  const ma = movingAverage(prices, period);
+  const {trades, total} = backtest(prices, ma);
+  
+  const ul = document.getElementById('trades');
+  ul.innerHTML = '';
+  
+  trades.forEach(trade => {
+    let li = document.createElement('li');
+    if (trade.action==='Buy') {
+      li.textContent = `Day ${trade.day} - Bought at $${trade.price.toFixed(2)}`;
+
+    } else {
+      li.textContent = `Day ${trade.day} - Sold at $${trade.price.toFixed(2)} | Profit: $${trade.Profit.toFixed(2)}`;
+
+    }
+    ul.prepend(li);
+  });
+
+  document.getElementById('total').innerText = `$${total.toFixed(2)}`;
+
+});
+
+</script>
+</body>
+</html>
