@@ -1,0 +1,1 @@
+Allow users to add their own trading indicators (like Bollinger Bands, Moving Averages) and apply simple trading strategies (e.g., "Buy when the price crosses the 50-day moving average") to the random data.
